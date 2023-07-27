@@ -11,13 +11,10 @@
 
 namespace Jiannei\Response\Laravel\Support;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use Fomo\Response\Response;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Traits\Macroable;
 
 class Format implements \Jiannei\Response\Laravel\Contracts\Format
@@ -37,12 +34,11 @@ class Format implements \Jiannei\Response\Laravel\Contracts\Format
      * @param  mixed  $data
      * @param  int  $status
      * @param  array  $headers
-     * @param  int  $options
-     * @return JsonResponse
+     * @return Response
      */
-    public function response($data = [], int $status = 200, array $headers = [], int $options = 0): JsonResponse
+    public function response($data = [], int $status = 200, array $headers = []): Response
     {
-        return new JsonResponse($data, $this->formatStatusCode($status), $headers, $options);
+        return new Response($this->formatStatusCode($status), $headers, $data);
     }
 
     /**
@@ -84,46 +80,6 @@ class Format implements \Jiannei\Response\Laravel\Contracts\Format
         $data = array_merge_recursive(['data' => $paginated['data']], $paginationInformation);
 
         return $this->data($data, $message, $code);
-    }
-
-    /**
-     * Format collection resource data.
-     *
-     * @param  ResourceCollection  $resource
-     * @param  string  $message
-     * @param  int  $code
-     * @param  array  $headers
-     * @param  int  $option
-     * @return array
-     */
-    public function resourceCollection(ResourceCollection $resource, string $message = '', int $code = 200, array $headers = [], int $option = 0): array
-    {
-        $data = array_merge_recursive(['data' => $resource->resolve(request())], $resource->with(request()), $resource->additional);
-        if ($resource->resource instanceof AbstractPaginator || $resource->resource instanceof AbstractCursorPaginator) {
-            $paginated = $resource->resource->toArray();
-            $paginationInformation = $this->formatPaginatedData($paginated);
-
-            $data = array_merge_recursive($data, $paginationInformation);
-        }
-
-        return $this->data($data, $message, $code);
-    }
-
-    /**
-     * Format JsonResource Data.
-     *
-     * @param  JsonResource  $resource
-     * @param  string  $message
-     * @param  int  $code
-     * @param  array  $headers
-     * @param  int  $option
-     * @return array
-     */
-    public function jsonResource(JsonResource $resource, string $message = '', int $code = 200, array $headers = [], int $option = 0): array
-    {
-        $resourceData = array_merge_recursive($resource->resolve(request()), $resource->with(request()), $resource->additional);
-
-        return $this->data($resourceData, $message, $code);
     }
 
     /**
